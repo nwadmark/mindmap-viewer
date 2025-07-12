@@ -1,2 +1,2 @@
-# upanishad-mindmap-viewer
+# mindmap-viewer
 Mindmap
