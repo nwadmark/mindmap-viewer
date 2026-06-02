@@ -13,7 +13,7 @@ AI-powered conversational assistant prototype demonstrating autonomous, proactiv
 
 ## Live Demo
 
-[View Prototype →](https://nwadmark.github.io/Conversational-AI-Demo/wells_fargo_network_ops.html)
+[View Prototype →](https://nwadmark.github.io/Conversational-AI-Demo/demo.html)
 
 ## Features by Persona
 
