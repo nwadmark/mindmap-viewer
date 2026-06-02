@@ -1720,11 +1720,28 @@
             scrollToBottom();
         }
 
-        // Handle insight card clicks
+        // Handle insight card clicks - start the full conversation flow
         function handleCardClick(question) {
-            const messageInput = document.getElementById('messageInput');
-            messageInput.value = question;
-            sendCustomMessage();
+            // Remove the insight cards
+            const insightSection = document.querySelector('.insight-cards-section');
+            if (insightSection) {
+                insightSection.remove();
+            }
+
+            // Remove the "I've surfaced" message and its suggestions
+            const messages = chatContainer.querySelectorAll('.message');
+            const lastMessage = messages[messages.length - 1];
+            if (lastMessage && lastMessage.textContent.includes("I've surfaced")) {
+                lastMessage.remove();
+            }
+
+            // Start the actual conversation flow
+            currentStep = -1; // Reset to beginning
+
+            // Show the first message in the conversation
+            setTimeout(() => {
+                handleSuggestionClick(0); // This will trigger the first exchange
+            }, 300);
         }
 
         function handleSuggestionClick(suggestionIndex) {
