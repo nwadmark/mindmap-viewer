@@ -1768,21 +1768,48 @@
                 // Show user selection
                 addMessage('user', personaName);
 
-                // Show insight cards instead of first message
+                // Show persona-specific welcome and insight cards
                 setTimeout(() => {
-                    displayInsightCards(personaName);
-
-                    // Add a helpful message about the cards
+                    const typing = showTypingIndicator();
                     setTimeout(() => {
-                        const typing = showTypingIndicator();
+                        typing.remove();
+
+                        // Persona-specific welcome messages
+                        const welcomeMessages = {
+                            "Network Ops (Global)": {
+                                text: "**Network Operations Dashboard Initialized**\n\nI'm monitoring your global infrastructure: 847 sites, 18,642 devices, 2.4M flows/sec. I've identified 3 critical issues requiring attention and $676K in optimization opportunities.\n\nHere are the most urgent items on your dashboard:",
+                                suggestions: ["Show me critical alerts", "Run capacity planning", "Check PSIRT status"]
+                            },
+                            "Security Ops (SOC)": {
+                                text: "**Security Operations Center Online**\n\nI'm your autonomous SOC analyst monitoring SecureX, Firepower, Umbrella, ISE, and Splunk. In the last 24 hours, I've blocked 847 threats and identified 2 active incidents requiring investigation.\n\nHere's what needs your attention:",
+                                suggestions: ["Show active threats", "Review critical CVEs", "Run threat hunt"]
+                            },
+                            "Executive Overview": {
+                                text: "**Executive Command Center Ready**\n\nI'm monitoring your entire IT portfolio ($47.2M spend, 847 sites). Current status: 99.94% availability, security score 87/100, with $14.4M in optimization opportunities identified.\n\nHere are your key business metrics:",
+                                suggestions: ["Show me KPIs", "What are my top risks?", "Review 2026 strategy"]
+                            },
+                            "Procurement / Asset Mgmt": {
+                                text: "**Procurement Dashboard Active**\n\nTracking 347 contracts, 18,642 assets, $47.2M annual spend. I've identified 8 expiring contracts (30 days), 820 unused licenses ($890K optimization), and 47 EOL devices.\n\nHere are the urgent procurement items:",
+                                suggestions: ["Show expiring contracts", "Find cost savings", "Review EOL devices"]
+                            },
+                            "AI Security Operations": {
+                                text: "**AI Security Analysis Complete**\n\nI've deployed autonomous security models to analyze your entire codebase and infrastructure. This week I discovered 847 vulnerabilities, identified 12 exploit chains, and generated 614 auto-remediation proposals.\n\nHere's what the AI found:",
+                                suggestions: ["Show vulnerability details", "Review exploit chains", "Apply auto-fixes"]
+                            }
+                        };
+
+                        const welcome = welcomeMessages[personaName] || {
+                            text: "Dashboard initialized. How can I help you today?",
+                            suggestions: ["Show me everything", "What's urgent?"]
+                        };
+
+                        addMessage('assistant', welcome.text, welcome.suggestions);
+
+                        // Show insight cards after welcome
                         setTimeout(() => {
-                            typing.remove();
-                            addMessage('assistant',
-                                "I've surfaced the most critical insights for you. Click any card to dive deeper, or ask me anything about your environment.",
-                                ["What can you help me with?", "Show me everything", "File a TAC case"]
-                            );
-                        }, 800);
-                    }, 600);
+                            displayInsightCards(personaName);
+                        }, 400);
+                    }, 1200);
                 }, 600);
                 return;
             }
