@@ -1746,7 +1746,13 @@
 
         function handleSuggestionClick(suggestionIndex) {
             const allButtons = document.querySelectorAll('.suggestion-btn');
-            allButtons.forEach(btn => {
+
+            // Get the suggestion text before disabling buttons
+            let suggestionText = '';
+            allButtons.forEach((btn, index) => {
+                if (index === suggestionIndex) {
+                    suggestionText = btn.textContent;
+                }
                 btn.disabled = true;
             });
 
@@ -1779,24 +1785,19 @@
                 return;
             }
 
-            // Regular conversation flow
-            currentStep++;
-            if (currentStep < conversation.length) {
-                const userMessage = conversation[currentStep];
-                addMessage(userMessage.role, userMessage.text);
+            // For interactive suggestions, send as custom message
+            // Add user message
+            addMessage('user', suggestionText);
 
-                currentStep++;
-                if (currentStep < conversation.length) {
-                    setTimeout(() => {
-                        const typing = showTypingIndicator();
-                        setTimeout(() => {
-                            typing.remove();
-                            const assistantMessage = conversation[currentStep];
-                            addMessage(assistantMessage.role, assistantMessage.text, assistantMessage.suggestions);
-                        }, 1200);
-                    }, 600);
-                }
-            }
+            // Generate and show assistant response
+            setTimeout(() => {
+                const typing = showTypingIndicator();
+                setTimeout(() => {
+                    typing.remove();
+                    const response = generateSmartResponse(suggestionText);
+                    addMessage('assistant', response.text, response.suggestions);
+                }, 1200);
+            }, 600);
         }
 
         function resetChat() {
@@ -1813,142 +1814,197 @@
             // If no persona selected yet, guide them to select one
             if (!currentPersona) {
                 return {
-                    text: "Please select a persona first using the buttons above (Network Ops, Security Ops, Procurement, or Executive Overview) to start our conversation.",
-                    showInfo: true
+                    text: "Please select a persona first using the buttons above (Network Ops, Security Ops, AI Security Operations, Procurement, or Executive Overview) to start our conversation.",
+                    suggestions: ["Network Ops (Global)", "Security Ops (SOC)", "Executive Overview"]
                 };
             }
 
-            // Check for TAC support requests (applies to all personas)
-            if (lowerQ.includes('tac') || lowerQ.includes('support case') || lowerQ.includes('support ticket') || lowerQ.includes('file case') || lowerQ.includes('open case') || lowerQ.includes('technical support')) {
+            // Universal commands
+            if (lowerQ.includes('help') || lowerQ === 'what can you do' || lowerQ === 'capabilities') {
+                const helpTexts = {
+                    "Network Ops (Global)": "I can help you with:\n\n🔧 **Network Operations**\n• PSIRT remediation & security patching\n• Capacity planning & WAN optimization\n• Datacenter ACI health monitoring\n• TAC case filing & troubleshooting\n• Compliance scanning (PCI, SOX)\n• Configuration management\n\nTry asking: \"Show me capacity issues\" or \"What PSIRTs need attention?\"",
+                    "Security Ops (SOC)": "I can help you with:\n\n🛡️ **Security Operations**\n• Threat detection & incident response\n• Vulnerability management (CVE tracking)\n• Threat hunting & IOC analysis\n• Red team simulation & testing\n• Compliance monitoring (SOC2)\n• Endpoint health analysis\n\nTry asking: \"Show me active threats\" or \"Run a security scan\"",
+                    "Executive Overview": "I can help you with:\n\n📊 **Executive Intelligence**\n• KPI dashboards & performance metrics\n• Enterprise risk assessment\n• Financial optimization & ROI analysis\n• Strategic planning & roadmaps\n• Board-ready reporting\n• Investment decision modeling\n\nTry asking: \"Show me our KPIs\" or \"What are the top risks?\"",
+                    "Procurement / Asset Mgmt": "I can help you with:\n\n💰 **Procurement & Assets**\n• Contract renewal tracking\n• License optimization & reclamation\n• EOL/EOS device management\n• Cost savings identification\n• Vendor negotiations\n• Budget planning\n\nTry asking: \"Show me expiring contracts\" or \"Find cost savings\""
+                };
                 return {
-                    text: "I can file TAC (Technical Assistance Center) cases automatically when I detect issues. In the Network Ops demo, I detect a Nexus 9K issue with high CoPP drops and elevated CPU, then file TAC case #625847392 with full diagnostics, severity classification, and live telemetry stream. The case is assigned to Advanced Services with <2 hour response time. Follow the guided conversation to see the complete TAC filing workflow in action.",
-                    showInfo: true
+                    text: helpTexts[currentPersona] || "I'm your AI assistant for enterprise IT operations. Ask me anything!",
+                    suggestions: ["Show me everything", "What's urgent?", "Give me a summary"]
                 };
             }
 
-            // Persona-specific responses
+            // NETWORK OPS RESPONSES
             if (currentPersona === "Network Ops (Global)") {
-                if (lowerQ.includes('psirt') || lowerQ.includes('security') || lowerQ.includes('vulnerabilit') || lowerQ.includes('patch')) {
+                // Capacity & Performance
+                if (lowerQ.match(/capacity|bandwidth|wan|saturation|utilization|circuit/)) {
                     return {
-                        text: "For security advisories, I map PSIRTs directly to your devices and can draft remediation plans. In this demo, we handle 3 critical PSIRTs affecting 217 devices (Catalyst 9300, ASA, FXOS) with automated pilot ring deployment. Use the suggestion buttons to walk through the PSIRT remediation workflow.",
-                        showInfo: true
+                        text: "**Capacity Analysis - 46 Branches at Risk**\n\nI've analyzed network growth trends and identified:\n\n🔴 **Critical (19 days)**\n• Newark Branch: 1Gbps DIA at 87% peak (trending +18% MoM)\n• Predicted saturation: June 21st at 2:47 PM\n• Impact: 450 users, $127K/day productivity loss\n\n🟡 **Medium Risk (42 days)**\n• Daly City: 500Mbps at 92% during market hours\n• Austin: Adequate bandwidth, but QoS misconfig causing Zoom issues\n\n**Autonomous Actions I Can Take:**\n• Fix Austin QoS now (5 min, zero downtime)\n• Order Newark 2Gbps circuit upgrade\n• Deploy SD-WAN local breakout for SaaS traffic\n\nWhat would you like me to do?",
+                        suggestions: ["Fix Austin QoS now", "Show me Newark details", "Analyze all 46 branches"]
                     };
                 }
-                if (lowerQ.includes('capacity') || lowerQ.includes('bandwidth') || lowerQ.includes('wan') || lowerQ.includes('branch')) {
+
+                // PSIRTs & Security
+                if (lowerQ.match(/psirt|cve|vulnerability|patch|security advisory/)) {
                     return {
-                        text: "I monitor capacity across all 46 at-risk branches and can predict saturation windows. In this demo, we fix QoS issues at Austin Domain and plan upgrades for Newark (19 days to saturation). Follow the guided conversation to see capacity management in action.",
-                        showInfo: true
+                        text: "**PSIRT Analysis - 3 Critical Advisories**\n\nI've mapped security advisories to your exact asset inventory:\n\n🔴 **CVE-2026-12346** - ASA Authentication Bypass\n• **Affected**: 38 ASA 5516 firewalls (datacenter perimeter)\n• **CVSS**: 9.8 (Critical)\n• **Exploit**: Public PoC available\n• **Impact**: Complete network access if exploited\n\n🔴 **IOS-XE RCE** - CVSS 9.1\n• **Affected**: 143 Catalyst 9300 switches (47 branches)\n• **Fix**: Upgrade to 17.9.5a\n• **I've tested this in your lab** - zero issues found\n\n🟠 **FXOS Privilege Escalation** - CVSS 8.4\n• **Affected**: 36 Firepower chassis\n• **Fix ready**: Firmware staged and verified\n\n**I can deploy patches in pilot rings (Ring 0→1→2→3) with automatic rollback if issues detected.**\n\nShall I proceed?",
+                        suggestions: ["Start pilot patching", "Show me test results", "What's the timeline?"]
                     };
                 }
-                if (lowerQ.includes('compliance') || lowerQ.includes('pci') || lowerQ.includes('sox') || lowerQ.includes('config') || lowerQ.includes('drift')) {
+
+                // Datacenter & ACI
+                if (lowerQ.match(/datacenter|aci|nexus|fabric|spine|leaf/)) {
                     return {
-                        text: "I run compliance scans for PCI, SOX, and configuration drift. In this demo, we discover 12 PCI violations, 4 SOX issues, and 22 switches off standard. Continue the conversation to see automated remediation task creation.",
-                        showInfo: true
+                        text: "**Datacenter ACI Health - 3 Fabrics**\n\n✅ **Charlotte DC**: 98/100 (Excellent)\n• 12 leaf, 4 spine, 99.98% uptime\n• 0 critical faults\n\n✅ **Dallas DC**: 95/100 (Good)\n• 8 leaf, 2 spine, 99.96% uptime\n• Minor: 5 informational alerts\n\n⚠️ **San Francisco DC**: 96/100 (Recently Fixed)\n• 10 leaf, 4 spine, 99.95% uptime\n• **Fixed**: Leaf CPU 82%→38% (Kubernetes optimization)\n• **Fixed**: 1,006 unused contracts cleaned up\n\n**Recent Autonomous Actions:**\n• Optimized SF endpoint learning (18K→842 endpoints)\n• Reduced BFD sessions by 69%\n• Policy cleanup freed 35% capacity\n\nNeed details on any fabric?",
+                        suggestions: ["Show SF remediation details", "Run ACI health check", "Check multi-site status"]
                     };
                 }
-                if (lowerQ.includes('issue') || lowerQ.includes('problem') || lowerQ.includes('outage') || lowerQ.includes('down') || lowerQ.includes('error')) {
+
+                // TAC & Support
+                if (lowerQ.match(/tac|support case|ticket|rma|hardware/)) {
                     return {
-                        text: "When I detect issues, I can automatically file TAC cases with full diagnostics. In this demo, I detect a Nexus 9K spine switch with high CoPP drops and elevated CPU (68%), then file TAC case #625847392 with severity 2 (critical). Complete with real-time telemetry stream and <2 hour response SLA. Continue the conversation to see this workflow.",
-                        showInfo: true
+                        text: "**TAC & Proactive Care**\n\n🔧 **Predicted Hardware Failure**\n• **Device**: Catalyst 9500-24Y (Charlotte DC)\n• **Issue**: 3 fan modules declining RPM\n• **Prediction**: Failure in 48-72h → temp spike → shutdown\n• **Impact**: 400 users lose connectivity\n• **Action Taken**: Opened RMA #RMA-2026-084721\n• **Status**: Fans shipping overnight, arrive tomorrow 10 AM\n\n**Auto-Generated Diagnostics Ready:**\n• Full show tech\n• Environmental logs\n• Baseline health metrics\n• Suggested troubleshooting steps\n\n**I can file TAC cases automatically when I detect issues, with full diagnostics and telemetry streams attached.**\n\nNeed help with a current issue?",
+                        suggestions: ["Show me RMA status", "File a new TAC case", "Run diagnostics"]
                     };
                 }
+
+                // Issues & Alerts
+                if (lowerQ.match(/issue|problem|alert|down|outage|error|critical/)) {
+                    return {
+                        text: "**Active Alerts - 3 Issues Detected**\n\n🔴 **CRITICAL**: Newark WAN Saturation\n• 19 days until complete saturation\n• 450 users impacted\n• **Action**: Circuit upgrade + temp SD-WAN fix\n\n🟡 **HIGH**: 8 Critical CVEs\n• 217 devices need patching\n• Public exploits available\n• **Action**: Pilot deployment starting\n\n🟡 **MEDIUM**: 5 Contracts Expiring (60 days)\n• $423K SmartNet renewal\n• **Action**: Quotes generated, sent to procurement\n\n**All issues have autonomous mitigation plans ready.**\n\nWhich should we tackle first?",
+                        suggestions: ["Fix Newark capacity", "Patch the CVEs", "Handle contracts"]
+                    };
+                }
+
+                // Default Network Ops
                 return {
-                    text: "As a Network Ops assistant, I help with PSIRTs, capacity planning, compliance scanning, ACI operations, TAC case filing, and change management. Use the suggestion buttons above to explore these workflows, or ask about a specific area like security, capacity, or TAC support.",
-                    showInfo: true
+                    text: "I'm monitoring your 847 sites, 18,642 devices, and 2.4M flows/sec. Everything is running smoothly - 99.94% availability (30-day).\n\n**Quick Stats:**\n• 3 active alerts (1 critical)\n• 12 PSIRTs pending remediation\n• 46 branches approaching capacity\n• $676K in optimization opportunities\n\nWhat would you like to explore?",
+                    suggestions: ["Show me critical alerts", "Run capacity planning", "Check PSIRT status"]
                 };
             }
 
+            // SECURITY OPS RESPONSES
             if (currentPersona === "Security Ops (SOC)") {
-                if (lowerQ.includes('threat') || lowerQ.includes('attack') || lowerQ.includes('malware') || lowerQ.includes('incident')) {
+                // Threats & Incidents
+                if (lowerQ.match(/threat|attack|incident|breach|compromise|malware/)) {
                     return {
-                        text: "I monitor active threats across SecureX, Firepower, Umbrella, and ISE. In this demo, we investigate lateral movement (10.45.22.18), analyze phishing campaigns, and hunt for reconnaissance activity from Tor exit nodes. Follow the guided flow to see incident response in action.",
-                        showInfo: true
+                        text: "**Active Threat Intelligence - Last 24 Hours**\n\n🔴 **ACTIVE INCIDENT** - Lateral Movement Detected\n• **Source**: 10.45.22.18 (DESKTOP-CHR-047, Charlotte)\n• **User**: jsmith@company.com\n• **Behavior**: SMB connections to 23 servers (abnormal)\n• **Status**: Device quarantined by ISE\n• **Attribution**: Likely APT-42 FinPhish campaign\n\n**Autonomous Actions Taken:**\n✓ Device isolated to remediation VLAN\n✓ Packet capture initiated (30-min window)\n✓ User credentials reset\n✓ 5-step remediation plan executed\n✓ Threat hunt launched for additional compromises\n\n**Threat Hunt Results:**\n• 0 other devices compromised\n• VPN login from Tor detected (entry vector found)\n• 14 users received same phishing email (12 blocked)\n\nWant the full forensics report?",
+                        suggestions: ["Show forensics details", "Run threat simulation", "Check endpoint health"]
                     };
                 }
-                if (lowerQ.includes('cve') || lowerQ.includes('vulnerabilit') || lowerQ.includes('patch')) {
+
+                // CVEs & Vulns
+                if (lowerQ.match(/cve|vulnerability|patch|exploit/)) {
                     return {
-                        text: "I track CVEs mapped to your assets and prioritize remediation. This demo covers 3 critical CVEs (Catalyst 9K, ASA auth bypass, FMC) with risk-based patching plans. Continue the conversation to see vulnerability management workflows.",
-                        showInfo: true
+                        text: "**Critical CVE Analysis - 8 CVEs Affecting Your Environment**\n\n🔴 **CVE-2026-12346** - ASA Auth Bypass (CVSS 9.8)\n• 38 ASA firewalls affected\n• Public exploit available\n• Patching plan ready\n\n🔴 **CVE-2025-12345** - Catalyst 9K RCE (CVSS 9.1)\n• 143 switches exposed\n• Lab-tested patch available\n\n🟡 **CVE-2025-12347** - FMC Privilege Escalation (CVSS 8.4)\n• 4 devices affected\n• Workaround applied\n\n**Remediation Status:**\n• ASA patching: Scheduled for Sat 02:00-06:00\n• Catalyst patching: Ring 0 pilot Tuesday\n• Change tickets: Created with rollback procedures\n\nWant to accelerate the timeline?",
+                        suggestions: ["Expedite ASA patching", "Show patch schedule", "View exposure map"]
                     };
                 }
-                if (lowerQ.includes('compliance') || lowerQ.includes('soc2') || lowerQ.includes('audit')) {
+
+                // Compliance
+                if (lowerQ.match(/compliance|soc2|audit|pci|sox/)) {
                     return {
-                        text: "I monitor security compliance for SOC2, PCI, and custom frameworks. In this demo, we're at 96% SOC2 compliance with 4% gaps in logging, MFA, and access reviews. Follow the flow to see remediation planning.",
-                        showInfo: true
+                        text: "**SOC2 Compliance Status - 99.2% Ready**\n\n✅ **Compliant Controls:**\n• Logging: 100% (4 devices fixed)\n• Encryption: 100% (6 S3 buckets encrypted)\n• Access reviews: 100% (22 orphaned accounts disabled)\n\n⏳ **Remaining Gaps (0.8%):**\n• MFA enrollment: 88% (5 admins pending)\n• ETA: 48 hours\n\n**Audit Outcome Prediction:** 98% probability of PASS\n\n**Audit Timeline:**\n• Audit date: 21 days from now\n• Final checks: Week of audit\n• Evidence package: Auto-generated and ready\n\nNeed the evidence package now?",
+                        suggestions: ["Download evidence package", "Push final MFA enrollment", "Run compliance scan"]
                     };
                 }
+
+                // Threat Hunting
+                if (lowerQ.match(/hunt|ioc|reconnaissance|scan|probe/)) {
+                    return {
+                        text: "**Threat Hunt Results - 30-Day Analysis**\n\n🔍 **Reconnaissance Activity Detected**\n• **Source**: 7 Tor exit nodes\n• **Behavior**: Port scanning (SSH, HTTPS, RDP)\n• **Targets**: VPN gateways, web servers\n• **Blocked**: 2,347 attempts by Firepower IPS\n• **Pattern**: APT scanning behavior (escalating frequency)\n\n**Analysis:**\n• Early scans: Generic port probes\n• Recent scans: Specific Cisco service fingerprinting\n• **Hypothesis**: Adversary mapping your environment\n• **Risk**: Pre-attack reconnaissance\n\n**Recommendation:**\n✓ Add IPs to global blocklist\n✓ Enable Talos threat feeds (done)\n✓ Monthly threat hunts\n\nWant to run a red team simulation?",
+                        suggestions: ["Run red team exercise", "Enable advanced threat feeds", "Show IOC details"]
+                    };
+                }
+
+                // Default Security Ops
                 return {
-                    text: "As a Security Ops assistant, I help with threat detection, incident response, vulnerability management, threat hunting, and compliance. Use the buttons to explore threat investigations, CVE remediation, or compliance workflows.",
-                    showInfo: true
+                    text: "**Security Operations Dashboard**\n\nReal-time monitoring across SecureX, Firepower, Umbrella, ISE, and SIEM.\n\n**Last 24 Hours:**\n• 847 threats blocked automatically\n• 2 active investigations (1 contained)\n• 8 critical CVEs mapped to assets\n• 341 malware callbacks blocked at DNS\n• Security score: 87/100 (+3 from last month)\n\nWhat would you like to investigate?",
+                    suggestions: ["Show active threats", "Run vulnerability scan", "Check compliance status"]
                 };
             }
 
-            if (currentPersona === "Procurement / Asset Mgmt") {
-                if (lowerQ.includes('contract') || lowerQ.includes('renewal') || lowerQ.includes('expir')) {
-                    return {
-                        text: "I track all contract renewals and expirations. In this demo, we have 8 contracts expiring in 30 days ($2.4M) and 23 in 90 days ($8.7M). We optimize a SmartNet renewal with 5-year co-terming for $265K savings. Follow the guided conversation to see contract management.",
-                        showInfo: true
-                    };
-                }
-                if (lowerQ.includes('license') || lowerQ.includes('true-up') || lowerQ.includes('reclaim')) {
-                    return {
-                        text: "I identify license optimization opportunities across your entire portfolio. In this demo, we reclaim $433K/year through Umbrella, DNA, Webex, and Duo license rightsizing. Continue the flow to see automated license adjustment via Smart Licensing.",
-                        showInfo: true
-                    };
-                }
-                if (lowerQ.includes('eol') || lowerQ.includes('eos') || lowerQ.includes('refresh') || lowerQ.includes('end of life')) {
-                    return {
-                        text: "I track all EOL/EOS devices and create phased refresh roadmaps. This demo shows 67 EOL devices requiring $1.8M refresh across 4 quarters (ASA, Nexus, Catalyst, UCS). Follow the conversation to see budget planning.",
-                        showInfo: true
-                    };
-                }
-                if (lowerQ.includes('cost') || lowerQ.includes('saving') || lowerQ.includes('ela') || lowerQ.includes('negotiat')) {
-                    return {
-                        text: "I analyze spend and identify renegotiation opportunities. In this demo, we optimize a $30.2M Cisco ELA down to $26.8M (11% reduction) through consumption-based pricing and 3-year commitment. Continue to see ELA optimization.",
-                        showInfo: true
-                    };
-                }
-                return {
-                    text: "As a Procurement assistant, I help with contract renewals, license optimization, EOL/EOS tracking, spend analysis, and vendor negotiations. Use the buttons to explore contract management, license reclamation, or refresh planning.",
-                    showInfo: true
-                };
-            }
-
+            // EXECUTIVE OVERVIEW RESPONSES
             if (currentPersona === "Executive Overview") {
-                if (lowerQ.includes('kpi') || lowerQ.includes('metric') || lowerQ.includes('performance')) {
+                // KPIs & Metrics
+                if (lowerQ.match(/kpi|metric|performance|dashboard|score/)) {
                     return {
-                        text: "I track key performance indicators across your entire Cisco estate. In this demo: Availability 99.94%, Security Score 87/100, MTTR 4.2h, and 47 incidents (down 12%). Follow the guided flow to see detailed KPI analysis and improvement plans.",
-                        showInfo: true
+                        text: "**Executive KPI Dashboard - Board-Ready**\n\n📊 **Operational Excellence (30-Day)**\n• Availability: 99.94% (⚠️ target 99.95%)\n• Security Score: 87/100 (✅ +3 points)\n• MTTR: 4.2h (⚠️ target <4h)\n• Incidents: 47 total (✅ down 12% YoY)\n\n💰 **Financial Performance**\n• IT Spend: $47.2M annual (on budget)\n• Cost/User: $312/month (9.5% above benchmark)\n• Savings Identified: $14.4M over 3 years\n\n🎯 **Strategic Initiatives (2026)**\n• Zero Trust: 67% maturity → 95% target\n• AI/Automation: 40% deployed → 85% target\n• Cloud Migration: 35% → 60% workloads\n\n**AI Recommendation:** Invest $37K (LTE backup) → prevent $270K annual risk → 7.3x ROI\n\nNeed detailed analysis?",
+                        suggestions: ["Deep-dive on risks", "Show financial breakdown", "Model LTE investment"]
                     };
                 }
-                if (lowerQ.includes('risk') || lowerQ.includes('exposure')) {
+
+                // Risks
+                if (lowerQ.match(/risk|threat|exposure|vulnerability/)) {
                     return {
-                        text: "I provide enterprise risk visibility with mitigation tracking. This demo covers Top 5 risks: Security (CVEs), Compliance (SOC2), Capacity (WAN saturation), Financial (license waste), and EOL devices. Continue to see risk deep-dives and remediation.",
-                        showInfo: true
+                        text: "**Top 5 Enterprise Risks - Heat Map**\n\n🔴 **CRITICAL (3)**\n1. **Security**: 8 critical CVEs (potential $8.4M breach)\n   • 217 devices affected\n   • Public exploits available\n   • Mitigation: 78% complete, ETA 5 days\n\n2. **Capacity**: Newark WAN saturation (19 days)\n   • 450 users impacted\n   • $127K/day productivity loss\n   • Mitigation: Temp fix deployed, crisis averted\n\n3. **Compliance**: SOC2 audit (21 days)\n   • 99.2% ready (5 MFA enrollments pending)\n   • $2.4M revenue at risk if failed\n   • Mitigation: 98% pass probability\n\n🟡 **HIGH (7)** - EOL devices, license waste, etc.\n🟢 **MEDIUM (12)** - Managed via standard processes\n\nWhich risk needs executive attention?",
+                        suggestions: ["Model security risk", "Review compliance gaps", "Show mitigation plans"]
                     };
                 }
-                if (lowerQ.includes('financial') || lowerQ.includes('cost') || lowerQ.includes('roi') || lowerQ.includes('saving')) {
+
+                // Financial
+                if (lowerQ.match(/cost|financial|saving|roi|budget|spend/)) {
                     return {
-                        text: "I provide financial optimization analysis across your $47.2M IT spend. In this demo, we identify $4.1M/year in savings through license reclamation, ELA renegotiation, and operational improvements. Follow the flow to see board-ready financial summaries.",
-                        showInfo: true
+                        text: "**Financial Optimization - $14.4M Identified**\n\n💰 **3-Year Savings Breakdown:**\n\n**License Optimization: $4.1M**\n• Umbrella reclamation: $246K/year\n• DNA Advantage: $67K/year\n• ISE Plus: $98K/year\n• Total: $411K annual\n\n**Contract Optimization: $3.4M**\n• SmartNet 5-year co-term: $265K savings\n• ELA renegotiation: 11% reduction\n• Consumption-based pricing\n\n**Operational Efficiency: $6.9M**\n• AI/Automation: 40% MTTR reduction\n• Incident prevention: $180K/year\n• Change management: $90K/year\n\n**Net Investment Required:**\n• LTE backup: $68K Year 1\n• AI/Automation platform: $450K\n• ROI: 603% over 5 years\n\nWant the board presentation?",
+                        suggestions: ["Generate board deck", "Model investment scenarios", "Show quarterly breakdown"]
                     };
                 }
-                if (lowerQ.includes('strateg') || lowerQ.includes('roadmap') || lowerQ.includes('2025') || lowerQ.includes('planning')) {
+
+                // Strategy
+                if (lowerQ.match(/strateg|roadmap|planning|2026|initiative/)) {
                     return {
-                        text: "I help with strategic planning and roadmap development. This demo shows 2025 priorities: Zero Trust (95% maturity), AI/Automation (40% MTTR reduction), Cloud Migration, and Sustainability. Continue to see strategic investment planning.",
-                        showInfo: true
+                        text: "**2026 Strategic Roadmap - $4.63M Investment**\n\n🎯 **Priority 1: Zero Trust Architecture**\n• Investment: $1.2M\n• Outcome: 80% breach risk reduction\n• Timeline: 12 months\n• ROI: 558% over 3 years\n\n🤖 **Priority 2: AI/Automation Platform**\n• Investment: $450K\n• Outcome: 40% MTTR reduction, $2.4M savings\n• Timeline: 9 months\n• ROI: 1,120% over 3 years\n\n☁️ **Priority 3: Cloud Migration**\n• Investment: $2.8M\n• Datacenter savings: $1.1M/year\n• Payback: 18 months\n• ROI: 247% over 3 years\n\n**Total 3-Year NPV: $6.8M (147% net return)**\n\nReady for board presentation?",
+                        suggestions: ["Create board deck", "Compare scenarios", "Model alternatives"]
                     };
                 }
+
+                // Default Executive
                 return {
-                    text: "As an Executive assistant, I provide KPI dashboards, risk management, financial optimization, strategic planning, and board-ready reporting. Use the buttons to explore performance metrics, risk analysis, or 2025 strategy.",
-                    showInfo: true
+                    text: "**Executive Command Center - Real-Time Intelligence**\n\nI'm monitoring your entire IT portfolio (847 sites, 18,642 devices, $47.2M spend) and have identified:\n\n✅ **What's Working:**\n• Security posture improving (+3 points)\n• Incident volume down 12%\n• $14.4M savings pipeline\n• Strategic initiatives 78% on track\n\n⚠️ **What Needs Attention:**\n• 3 critical risks (security, capacity, compliance)\n• Cost per user 9.5% above benchmark\n• MTTR slightly above target\n\nWhat would you like to explore?",
+                    suggestions: ["Show me KPIs", "Deep-dive on risks", "Review 2026 strategy"]
+                };
+            }
+
+            // PROCUREMENT RESPONSES
+            if (currentPersona === "Procurement / Asset Mgmt") {
+                if (lowerQ.match(/contract|renewal|expir/)) {
+                    return {
+                        text: "**Contract Renewals - $11.1M at Risk**\n\n📅 **Expiring in 30 Days: $2.4M**\n• 8 contracts (SmartNet, DNA, Umbrella)\n• Risk: Service disruption if not renewed\n• Action: Quotes generated, awaiting approval\n\n📅 **Expiring in 90 Days: $8.7M**\n• 23 contracts across portfolio\n• Opportunity: Co-term for 12.5% savings\n• Recommendation: 5-year commit\n\n**Optimization Opportunity:**\n• Current approach: Renew individually\n• Smart approach: 5-year co-term all contracts\n• Savings: $265K + operational efficiency\n\nShall I generate the co-term proposal?",
+                        suggestions: ["Generate co-term proposal", "Show renewal timeline", "Prioritize by risk"]
+                    };
+                }
+
+                if (lowerQ.match(/license|reclaim|optimization|true-up/)) {
+                    return {
+                        text: "**License Optimization - $411K Annual Savings**\n\n💰 **Waste Detected:**\n• Umbrella: 109 inactive users = $246K/year\n• DNA Advantage: 45 unused = $67K/year\n• ISE Plus: 353 unused = $98K/year\n\n**Auto-Generated Actions:**\n✓ Cross-referenced with HR (terminated employees)\n✓ Reclamation plan ready\n✓ Smart Licensing adjustment queued\n\n**Before:**\n• 2,180 Umbrella licenses, 2,071 active\n• Annual cost: $2.03M\n\n**After Optimization:**\n• Reclaim 109, buy 200 new = net +91\n• Annual cost: $1.78M\n• **Savings: $246K/year**\n\nApprove auto-submission?",
+                        suggestions: ["Approve license adjustment", "Show detailed analysis", "Export savings report"]
+                    };
+                }
+
+                if (lowerQ.match(/eol|eos|end of life|refresh/)) {
+                    return {
+                        text: "**EOL Device Management - $1.8M Refresh Needed**\n\n⏰ **End-of-Life Devices in Production:**\n• 14x Catalyst 2960-X (EOL: Jan 2025)\n• 6x ASA 5515 (EOS: May 2025, no patches)\n• 47x misc devices reaching EOL in 12 months\n\n**Business Risk:**\n• No security patches → vulnerability exposure\n• No support → downtime risk\n• Compliance violations\n\n**Refresh Plan (Q4 2026):**\n• 2960-X → C9200 series: $84K\n• ASA → FTD/Firepower: $156K\n• Total budget: $240K\n• Timeline: Oct-Dec 2026\n\nApprove budget request?",
+                        suggestions: ["Approve budget request", "Show refresh roadmap", "Compare alternatives"]
+                    };
+                }
+
+                return {
+                    text: "**Procurement Dashboard**\n\nTracking 347 active contracts, 18,642 assets, $47.2M annual spend.\n\n**Quick Stats:**\n• 8 contracts expiring (30 days) - $2.4M\n• 820 unused licenses - $890K optimization\n• 47 EOL devices - $1.8M refresh needed\n• Savings identified: $14.4M (3-year)\n\nWhat would you like to optimize?",
+                    suggestions: ["Show contract renewals", "Find cost savings", "Plan EOL refresh"]
+                };
+            }
+
+            // AI SECURITY OPS
+            if (currentPersona === "AI Security Operations") {
+                return {
+                    text: "**AI Security Operations - Glasswing-Powered Analysis**\n\nI've deployed autonomous security models analyzing 2.4M lines of code and 18,642 assets.\n\n**This Week:**\n• 847 vulnerabilities discovered\n• 12 exploit chains identified\n• 614 auto-remediation fixes proposed\n\n**Zero-Day Found:**\nRCE in custom API gateway (/api/v2/auth) - unsafe deserialization, CVSS 9.8. Fix generated and tested.\n\nWant details?",
+                    suggestions: ["Show vulnerability details", "Review exploit chains", "Apply auto-fixes"]
                 };
             }
 
             // Generic fallback
             return {
-                text: `That's an interesting question for the ${currentPersona} persona! This is a guided demo showcasing specific workflows. I'd recommend using the suggestion buttons to explore the capabilities step-by-step, or ask about specific topics relevant to your role.`,
-                showInfo: true
+                text: `I understand you're asking about "${userQuestion}". Let me help with that in the context of ${currentPersona}.\n\nCould you be more specific? For example:\n• What specific metrics do you want to see?\n• Are you looking for current status or historical trends?\n• Do you need recommendations or just analysis?\n\nOr try using the suggestion buttons for common queries!`,
+                suggestions: ["Show me everything", "What's most urgent?", "Help me get started"]
             };
         }
 
@@ -1969,31 +2025,8 @@
                     typing.remove();
                     const response = generateSmartResponse(message);
 
-                    // Create custom message with info box
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = 'message assistant';
-
-                    let html = `
-                        <div class="message-header">
-                            <div class="avatar">AI</div>
-                            <div class="role-label">AI Assistant</div>
-                            <div class="message-time">${getCurrentTime()}</div>
-                        </div>
-                        <div class="message-bubble">${response.text}</div>
-                    `;
-
-                    if (response.showInfo) {
-                        html += `
-                            <div class="info-message" style="margin-left: 48px;">
-                                <strong>💡 Demo Mode</strong>
-                                This is a prototype showcasing key capabilities. In production, I would provide real-time analysis of your actual infrastructure, with live data from Cisco DNA Center, vManage, SecureX, and Smart Licensing.
-                            </div>
-                        `;
-                    }
-
-                    messageDiv.innerHTML = html;
-                    chatContainer.appendChild(messageDiv);
-                    scrollToBottom();
+                    // Use addMessage to properly handle suggestions
+                    addMessage('assistant', response.text, response.suggestions);
                 }, 1200);
             }, 600);
         }
