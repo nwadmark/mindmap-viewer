@@ -1,35 +1,34 @@
-# AI Assistant — Network Operations Prototype
+# Conversational-AI-Demo
 
-An AI-powered conversational assistant prototype demonstrating
-proactive, persona-aware intelligence for enterprise network operations.
+AI-powered conversational assistant prototype demonstrating autonomous, proactive intelligence across enterprise IT operations.
 
 ## What It Does
 
-- Proactive insight panel surfacing top priorities across vulnerabilities,
-  assessments, support cases, and renewals — without waiting to be asked
-- 3-persona switcher: Network Engineer, IT Director, Partner/CSM —
-  each with different priorities, card ordering, and response tone
-- Data-driven chat responses pulling from a simulated operational
-  data layer across 6 domains
-- Quick action bar with 5 one-tap shortcuts for common workflows
-- Voice input support via Web Speech API
-- Fully mobile responsive
+- **5 Persona-Specific Dashboards**: Network Ops, Security Ops, AI Security Operations, Procurement, Executive
+- **Proactive Insight Cards**: Critical alerts, vulnerabilities, renewals, and cost savings surfaced automatically
+- **Autonomous Actions**: AI takes multi-step actions across systems (not just recommendations)
+- **Predictive Intelligence**: Predicts capacity issues, hardware failures, and threats before they occur
+- **Voice Input Support**: Web Speech API integration for hands-free operation
+- **Advanced AI Security**: AI-powered vulnerability detection and exploit chain analysis
 
 ## Live Demo
 
-[View Prototype →](https://nwadmark.github.io/CIQ-Wells-Convo/wells_fargo_network_ops.html)
+[View Prototype →](https://nwadmark.github.io/Conversational-AI-Demo/demo.html)
 
-## Scenario
+## Features by Persona
 
-WF Financial Network Operations — fictional scenario using
-fully synthetic data. No real customer data used.
+**Network Ops**: Predictive capacity management, autonomous QoS optimization, proactive hardware RMA
+**Security Ops**: Traditional SOC operations with threat hunting and incident response
+**AI Security Operations**: Advanced AI vulnerability discovery, exploit chaining, autonomous remediation  
+**Procurement**: Contract optimization, license reclamation, cost savings identification ($676K found)
+**Executive**: KPIs, risk assessment, strategic insights, business impact analysis
 
 ## Built With
 
-- Vanilla HTML, CSS, JavaScript (no framework dependencies)
+- Vanilla HTML, CSS, JavaScript (single self-contained file)
 - Web Speech API for voice input
-- Claude Code (AI-assisted development)
+- Claude Code & Claude Sonnet 4.5 (AI-assisted development)
 
 ## Status
 
-Prototype / vision artifact. Not connected to production data.
+Prototype / vision artifact demonstrating AI-powered agentic future of IT operations.
