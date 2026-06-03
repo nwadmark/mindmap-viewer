@@ -1091,7 +1091,7 @@
             }
         ];
 
-        // AI Security Operations Persona - Glasswing/Mythos-inspired
+        // AI Security Operations Persona - Advanced AI-Powered Security Analysis
         personaConversations["AI Security Operations"] = [
             {
                 role: "assistant",
@@ -1119,7 +1119,7 @@
             { role: "user", text: "Yes, show me exploit chains" },
             {
                 role: "assistant",
-                text: "**AI-Discovered Exploit Chains (Glasswing-style Analysis):**\n\nI use advanced reasoning to chain multiple low/medium vulnerabilities into critical exploits that traditional scanners miss. Here are the top chains:\n\n**Chain #1: \"Shadow Admin\" (CVSS 9.1)**\n   1. Info disclosure in /debug endpoint → reveals service account names\n   2. Weak password policy on service accounts → brute-forceable\n   3. Privilege escalation via race condition in RBAC → admin access\n   4. **Impact**: Unauthenticated attacker → full admin in <2 hours\n   **Status**: Fix proposed, tested, ready to deploy\n\n**Chain #2: \"Data Leakage Pipeline\" (CVSS 8.7)**\n   1. CORS misconfiguration on API → cross-origin requests allowed\n   2. Missing rate limiting → unlimited API calls\n   3. GraphQL field-level auth bypass → internal data exposed\n   4. **Impact**: Competitor could scrape entire customer database\n   **Status**: Temporary WAF rules deployed, permanent fix in review\n\n**Chain #3: \"Container Escape\" (CVSS 9.4)**\n   1. Docker daemon exposed on internal network (misconfiguration)\n   2. Vulnerable container image with known CVE → code exec in container\n   3. Docker socket mount → container escape\n   4. Host kernel exploit → full infrastructure compromise\n   **Impact**: Single compromised container → entire Kubernetes cluster\n   **Status**: CRITICAL - Immediate remediation required\n\n**The chain analysis shows I'm not just finding bugs—I'm thinking like an attacker, chaining steps together that humans often miss.**\n\nFor Chain #3 (Container Escape), this is critical. Should I:\n   A) Auto-remediate immediately (patch kernel, rotate secrets, isolate network)\n   B) Create incident response plan for manual execution\n   C) Both - auto-remediate with full audit trail",
+                text: "**AI-Discovered Exploit Chains (Advanced Security Analysis):**\n\nI use advanced AI reasoning to chain multiple low/medium vulnerabilities into critical exploits that traditional scanners miss. Here are the top chains:\n\n**Chain #1: \"Shadow Admin\" (CVSS 9.1)**\n   1. Info disclosure in /debug endpoint → reveals service account names\n   2. Weak password policy on service accounts → brute-forceable\n   3. Privilege escalation via race condition in RBAC → admin access\n   4. **Impact**: Unauthenticated attacker → full admin in <2 hours\n   **Status**: Fix proposed, tested, ready to deploy\n\n**Chain #2: \"Data Leakage Pipeline\" (CVSS 8.7)**\n   1. CORS misconfiguration on API → cross-origin requests allowed\n   2. Missing rate limiting → unlimited API calls\n   3. GraphQL field-level auth bypass → internal data exposed\n   4. **Impact**: Competitor could scrape entire customer database\n   **Status**: Temporary WAF rules deployed, permanent fix in review\n\n**Chain #3: \"Container Escape\" (CVSS 9.4)**\n   1. Docker daemon exposed on internal network (misconfiguration)\n   2. Vulnerable container image with known CVE → code exec in container\n   3. Docker socket mount → container escape\n   4. Host kernel exploit → full infrastructure compromise\n   **Impact**: Single compromised container → entire Kubernetes cluster\n   **Status**: CRITICAL - Immediate remediation required\n\n**The chain analysis shows I'm not just finding bugs—I'm thinking like an attacker, chaining steps together that humans often miss.**\n\nFor Chain #3 (Container Escape), this is critical. Should I:\n   A) Auto-remediate immediately (patch kernel, rotate secrets, isolate network)\n   B) Create incident response plan for manual execution\n   C) Both - auto-remediate with full audit trail",
                 suggestions: ["Auto-remediate immediately", "Create incident response plan", "Both - auto-remediate with audit"]
             },
             { role: "user", text: "Both - auto-remediate with audit" },
@@ -1667,7 +1667,9 @@
             if (suggestions && suggestions.length > 0) {
                 html += '<div class="suggestions">';
                 suggestions.forEach((suggestion, index) => {
-                    html += `<button class="suggestion-btn" onclick="handleSuggestionClick(${index})">${suggestion}</button>`;
+                    // Escape quotes in suggestion text for onclick
+                    const escapedText = suggestion.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                    html += `<button class="suggestion-btn" onclick="handleSuggestionClick('${escapedText}')">${suggestion}</button>`;
                 });
                 html += '</div>';
             }
@@ -1744,21 +1746,21 @@
             }, 300);
         }
 
-        function handleSuggestionClick(suggestionIndex) {
-            const allButtons = document.querySelectorAll('.suggestion-btn');
+        function handleSuggestionClick(suggestionText) {
+            // If suggestionText is a number (old behavior), it's a persona selection index
+            if (typeof suggestionText === 'number') {
+                suggestionText = initialMessage.suggestions[suggestionText];
+            }
 
-            // Get the suggestion text before disabling buttons
-            let suggestionText = '';
-            allButtons.forEach((btn, index) => {
-                if (index === suggestionIndex) {
-                    suggestionText = btn.textContent;
-                }
+            // Disable all buttons in the same suggestion group
+            const allButtons = document.querySelectorAll('.suggestion-btn:not(:disabled)');
+            allButtons.forEach((btn) => {
                 btn.disabled = true;
             });
 
             // Check if this is persona selection (no persona set yet)
             if (!currentPersona) {
-                const personaName = initialMessage.suggestions[suggestionIndex];
+                const personaName = suggestionText;
                 currentPersona = personaName;
                 conversation = personaConversations[personaName];
                 currentStep = -1; // Will be incremented to 0
@@ -1996,7 +1998,7 @@
             // AI SECURITY OPS
             if (currentPersona === "AI Security Operations") {
                 return {
-                    text: "**AI Security Operations - Glasswing-Powered Analysis**\n\nI've deployed autonomous security models analyzing 2.4M lines of code and 18,642 assets.\n\n**This Week:**\n• 847 vulnerabilities discovered\n• 12 exploit chains identified\n• 614 auto-remediation fixes proposed\n\n**Zero-Day Found:**\nRCE in custom API gateway (/api/v2/auth) - unsafe deserialization, CVSS 9.8. Fix generated and tested.\n\nWant details?",
+                    text: "**AI Security Operations - Advanced Analysis**\n\nI've deployed autonomous AI security models analyzing 2.4M lines of code and 18,642 assets.\n\n**This Week:**\n• 847 vulnerabilities discovered\n• 12 exploit chains identified\n• 614 auto-remediation fixes proposed\n\n**Zero-Day Found:**\nRCE in custom API gateway (/api/v2/auth) - unsafe deserialization, CVSS 9.8. Fix generated and tested.\n\nWant details?",
                     suggestions: ["Show vulnerability details", "Review exploit chains", "Apply auto-fixes"]
                 };
             }

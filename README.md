@@ -9,7 +9,7 @@ AI-powered conversational assistant prototype demonstrating autonomous, proactiv
 - **Autonomous Actions**: AI takes multi-step actions across systems (not just recommendations)
 - **Predictive Intelligence**: Predicts capacity issues, hardware failures, and threats before they occur
 - **Voice Input Support**: Web Speech API integration for hands-free operation
-- **Glasswing/Mythos-Inspired Security**: AI-powered vulnerability detection and exploit chain analysis
+- **Advanced AI Security**: AI-powered vulnerability detection and exploit chain analysis
 
 ## Live Demo
 
@@ -19,7 +19,7 @@ AI-powered conversational assistant prototype demonstrating autonomous, proactiv
 
 **Network Ops**: Predictive capacity management, autonomous QoS optimization, proactive hardware RMA
 **Security Ops**: Traditional SOC operations with threat hunting and incident response
-**AI Security Operations**: Glasswing-style vulnerability discovery, exploit chaining, autonomous remediation  
+**AI Security Operations**: Advanced AI vulnerability discovery, exploit chaining, autonomous remediation  
 **Procurement**: Contract optimization, license reclamation, cost savings identification ($676K found)
 **Executive**: KPIs, risk assessment, strategic insights, business impact analysis
 
