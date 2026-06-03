@@ -1664,18 +1664,25 @@
                 <div class="message-bubble">${text}</div>
             `;
 
-            if (suggestions && suggestions.length > 0) {
-                html += '<div class="suggestions">';
-                suggestions.forEach((suggestion, index) => {
-                    // Escape quotes in suggestion text for onclick
-                    const escapedText = suggestion.replace(/'/g, "\\'").replace(/"/g, "&quot;");
-                    html += `<button class="suggestion-btn" onclick="handleSuggestionClick('${escapedText}')">${suggestion}</button>`;
-                });
-                html += '</div>';
-            }
-
             messageDiv.innerHTML = html;
             chatContainer.appendChild(messageDiv);
+
+            // Add suggestion buttons with proper event handlers
+            if (suggestions && suggestions.length > 0) {
+                const suggestionsDiv = document.createElement('div');
+                suggestionsDiv.className = 'suggestions';
+
+                suggestions.forEach((suggestion) => {
+                    const button = document.createElement('button');
+                    button.className = 'suggestion-btn';
+                    button.textContent = suggestion;
+                    button.onclick = () => handleSuggestionClick(suggestion);
+                    suggestionsDiv.appendChild(button);
+                });
+
+                messageDiv.appendChild(suggestionsDiv);
+            }
+
             scrollToBottom();
         }
 
